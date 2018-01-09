@@ -35,5 +35,9 @@
   - Name: **greeter** - must appear to activate our skill
   - ie. open/launch/talk to/begin **greeter** - activating the skill
   - tell/ask **greeter** to/for/about <some request>  - activating  and requesting in the same time
-    - Alexa, ask greeter to say hello to John
-    - Alexa, ask greeter to wish our 
+- Requests
+  - Alexa, ask greeter to say hello to **John**
+  - Alexa, ask greeter to wish our guest **John**
+  - Alexa, ask greeter to wish **John**
+- Response
+  - Helo **John**, Good morning
