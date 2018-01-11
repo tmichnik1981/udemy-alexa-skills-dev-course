@@ -294,3 +294,118 @@
    - The Lambda can be tested with your new test
 
 ###### Improvements
+
+1. Add requesting [forismatic](http://forismatic.com/en/api) to get random quatas.
+
+   - Take api-url (http://api.forismatic.com/api/1.0/json?method=getQuote&lang=en&format=json)
+
+   - Add quering to your lamba code
+
+     ```js
+     'use strict';
+     //importing http module
+     var http = require('http');
+
+     exports.handler = function (event, context) {
+       
+       /*------------------------------------------------**/
+            }else if(request.type == "IntentRequest"){
+             let options = {};
+             if(request.intent.name === "HelloIntent"){
+                 let name = request.intent.slots.FirstName.value;
+                 options.speechText = "Hello " + name + ". ";
+                 options.speechText += getWish();
+
+                 getQuote(function(quote, err){
+                     if(err){
+                         context.fail(err);
+                     }else{
+                         options.speechText+=quote;
+                         options.endSession = true;
+                         context.succeed(buildResponse(options));
+                     }
+                 });
+
+             }else {
+                 throw "Unknown intent";
+             }
+          }
+     }
+      /*------------------------------------------------**/
+
+     //new function
+     function getQuote(callback){
+         var url ="http://api.forismatic.com/api/1.0/json?method=getQuote&lang=en&format=json";
+         var req = http.get(url, function(res){
+             var body = "";
+             res.on('data', function(chunk){
+                 body+=chunk;
+             });
+
+             res.on('end', function(){
+                 body = body.replace(/\\/g,'');
+                 var quote = JSON.parse(body);
+                 callback(quote.quoteText);
+             });
+
+             res.on('error', function(err){
+                 callback('', err);
+             });
+         });
+     }
+     ```
+
+2. Testing locally
+
+   - Install node.js
+
+   - Node install procedure for macOS/linux (reference https://github.com/creationix/nvm)
+
+     ```bash
+     curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash
+     source ~/.bash_profile
+     nvm install v4.3.2
+     ```
+
+   - For windows, please download node.js from https://nodejs.org/en/download.
+
+   - Lambda local setup (https://github.com/ashiina/lambda-local)
+
+     ```shell
+     npm install -g lambda-local
+     ```
+
+   - Go to the directory with your lambda script and an event
+
+     ```shell
+     # index.js - lambda source code
+     # event.json - request
+     lambda-local -l index.js -h handler -e event.json
+     ```
+
+###### SSML ([Speech Synthesis Markup Language ](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/speech-synthesis-markup-language-ssml-reference))
+
+1. Testing SSML
+
+   - SSML tags allow for controlling how outputtext is pronounced
+
+   - Copy a sample to **Voice Simulator** in your skill
+
+   - Click **Listen** 
+
+     ```xml
+     <speak>
+         Here is a number spoken as a cardinal number: 
+         <say-as interpret-as="cardinal">12345</say-as>.
+         Here is a word spelled out: <say-as interpret-as="spell-out">hello</say-as>
+     </speak>
+     ```
+
+2. Modify your lambda
+
+
+
+
+
+
+

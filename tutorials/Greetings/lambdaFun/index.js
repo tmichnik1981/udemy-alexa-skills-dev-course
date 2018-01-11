@@ -1,4 +1,6 @@
 'use strict';
+
+var http = require('http');
 //only object in exports will be visible
 //event containes session object and request object 
 exports.handler = function (event, context) {
@@ -24,8 +26,17 @@ exports.handler = function (event, context) {
             let name = request.intent.slots.FirstName.value;
             options.speechText = "Hello " + name + ". ";
             options.speechText += getWish();
-            options.endSession = true;
-            context.succeed(buildResponse(options));
+
+            getQuote(function(quote, err){
+                if(err){
+                    context.fail(err);
+                }else{
+                    options.speechText+=quote;
+                    options.endSession = true;
+                    context.succeed(buildResponse(options));
+                }
+            });
+
         }else {
             throw "Unknown intent";
         }
@@ -38,6 +49,26 @@ exports.handler = function (event, context) {
     }catch(e){
         context.fail("Exception: " + e);
     }
+}
+
+function getQuote(callback){
+    var url ="http://api.forismatic.com/api/1.0/json?method=getQuote&lang=en&format=json";
+    var req = http.get(url, function(res){
+        var body = "";
+        res.on('data', function(chunk){
+            body+=chunk;
+        });
+
+        res.on('end', function(){
+            body = body.replace(/\\/g,'');
+            var quote = JSON.parse(body);
+            callback(quote.quoteText);
+        });
+
+        res.on('error', function(err){
+            callback('', err);
+        });
+    });
 }
 
 function getWish(){
