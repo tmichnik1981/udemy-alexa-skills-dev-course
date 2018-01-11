@@ -59,7 +59,7 @@
    - Name : "Greetings"
    - Invocation Name : "greeter"
 
-3. Fill **Interaction Model**       
+3. Fill **Interaction Model**      
 
    - Intent Schema ([built-in intents](https://developer.amazon.com/docs/custom-skills/implement-the-built-in-intents.html#Available%20Built-in%20Intents))- JSON declaration of intents (features ) and slots  (variables) 
 
@@ -108,16 +108,38 @@
      HelloIntent wish {FirstName}
      ```
 
-   - Configuration
+4. Configuration
 
-     - Service : **AWS Lambda ARN** (most recommended).
-     - In the **Default** field provide an url to your lambda function (or https service) ie. **arn:aws:lambda:eu-west-1:235502691856:function:hello-world-alexa-skill**
-     - Account Linking : **No**
+   - Service : **AWS Lambda ARN** (most recommended).
+   - In the Default field provide an url to your lambda function (or https service) ie. arn:aws:lambda:eu-west-1:235502691856:function:hello-world-alexa-skill
+   - Account Linking : **No**
+
+5. Test - when the lambda is already implemented
+
+   - Section: **Service Simulator**,  **Enter Utterances** =   write one of the utterances  previously provided (without an intent name) ie. "say hello to James"
+
+   - Click button **Ask Greetings** 
+
+   - You can do a similar test with your Echo Dot on with [Echo Simulator](https://echosim.io/welcome)
+
+     ```
+     # Say 
+     > Alexa, open greeter 
+     # after receiving a resonse, say
+     > say hello to John
+
+     # Or just
+     > Alexa, ask greeter to say hello to John
+     ```
+
+     ​
 
 ###### Creating a Lambda function
 
 1. Go to https://aws.amazon.com/, login or create an account
+
 2. Go to **Services** and choose **Lambda**
+
 3. Click **Create function**
    - Select **Author from scratch** or  **Blueprints** (to start with some sample code)
    - Name: "GreetingsSkill"
@@ -125,10 +147,150 @@
    - Role: **Choose an existing role** if have done that before or **Create a custom role** and then IAM Role: **lambda_basic_execution**. Click **Allow**.
    - Existing role: **lambda_basic_execution**
    - Click **Create function**
+
 4. Your new function **GreetingsSkill** is opened and you can continue with configuring and implementation.
    - In the **Designer** select **Alexa Skills Kit** trigger. Note that this kind of a trigger is not available for some locations. For sure it works for Ireland and US.
    - In the **Configure triggers**  section click **Add**
    - Handler: "index.handler" (by default), index - file, handler - main function
    - Other settings can be left as they are
    - Click **Save**
+
 5. Implementation
+
+   - possible requests (events) sent by Alexa skill kit to lambda
+
+     ```
+     i)   LaunchRequest       Ex: "Open greeter"
+     ii)  IntentRequest       Ex: "Say hello to John" or "ask greeter to say hello to John"
+     iii) SessionEndedRequest Ex: "exit" or error or timeout
+     ```
+
+   - Develop your lambda offline in your IDE, then pass to **Fuction code** section 
+
+     ```js
+     'use strict';
+     /*
+     	event - object with the request
+     	context - a helper object for communication with AWS lambda ie. sending responses
+     */
+     exports.handler = function (event, context) {
+
+     try{
+     	let request = event.request;
+     /**
+     	Request 
+         i)   LaunchRequest       Ex: "Open greeter"
+         ii)  IntentRequest       Ex: "Say hello to John" or "ask greeter to say hello to
+           		John"
+         iii) SessionEndedRequest Ex: "exit" or error or timeout
+      */
+     if(request.type == "LaunchRequest"){
+     	let options = {};
+         options.speechText= "Welcome to Greetings skill. Using our skill you can greet your 		guests. Whom you want to greet? ",
+           
+         options.repromptText= "You can say for example, say hello to John. ",
+         
+           options.endSession= false
+         // context.succeed() sending a response to Alexa
+         context.succeed(buildResponse(options));
+
+     }else if(request.type == "IntentRequest"){
+     	let options = {};
+       	//HelloIntent = intent name
+         if(request.intent.name === "HelloIntent"){
+         	let name = request.intent.slots.FirstName.value;
+         	options.speechText = "Hello " + name + ". ";
+         	options.speechText += getWish();
+         	options.endSession = true;
+         	context.succeed(buildResponse(options));
+         }else {
+         	throw "Unknown intent";
+        	}
+     } else if(request.type == "SessionEndedRequest"){
+
+     }else{
+     	context.fail("Unknown intent type");
+     }
+     }catch(e){
+     	context.fail("Exception: " + e);
+     }
+     }
+
+     function getWish(){
+         var myDate = new Date();
+         var hours = myDate.getUTCHours() - 8;
+         if(hours < 0){
+             hours  = hours + 24;
+         }
+         if(hours < 12){
+             return "Good Morning. ";
+         } else if(hours < 18){
+             return "Good afternoon. ";
+         } else{
+             return "Good evening. ";
+         }
+     }
+
+     function buildResponse(options){
+         var response = {
+             "version": "1.0",
+             "response": {
+             "outputSpeech": {
+                 "type": "PlainText",
+                 "text": options.speechText
+               },
+               "shouldEndSession": options.endSession
+         }
+     };
+
+     	if(options.repromptText){
+         	response.response.reprompt = {           
+             	     "outputSpeech": {
+                       "type": "PlainText",
+                       "text": options.repromptText
+                     }  
+             };
+         }
+         return response;
+     }
+     ```
+
+   - sample request
+
+     ```json
+     {
+       "session": {
+         "new": false,
+         "sessionId": "session1234",
+         "attributes": {},
+         "user": {
+           "userId": "usr123"
+         },
+         "application": {
+           "applicationId": "amzn1.echo-sdk-ams.app.5acba9b5-6d09-4444-aaa8-618c56eb0335"
+         }
+       },
+       "version": "1.0",
+       "request": {
+         "intent": {
+           "slots": {
+             "FirstName": {
+               "name": "FirstName",
+               "value": "John"
+             }
+           },
+           "name": "HelloIntent"
+         },
+         "type": "IntentRequest",
+         "requestId": "request5678"
+       }
+     }
+     ```
+
+   - Click **Test**
+
+   - Pass a sample request and save
+
+   - The Lambda can be tested with your new test
+
+###### Improvements
