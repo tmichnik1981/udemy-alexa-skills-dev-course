@@ -401,11 +401,103 @@
      </speak>
      ```
 
-2. Modify your lambda
+2. Modify your lambda code
 
+   ```javascript
+   /*---------------------------------------*/
+    if(request.intent.name === "HelloIntent"){
+      let name = request.intent.slots.FirstName.value;
+     options.speechText = `Hello <say-as interpret-as="spell-out">${name}</say-as> ${name}. `;
+     options.speechText += getWish();
 
+      getQuote(function(quote, err){
+   /*---------------------------------------*/         
 
+   function buildResponse(options){
+       var response = {
+           "version": "1.0",
+           "response": {
+           "outputSpeech": {
+               "type": "SSML",
+               "ssml":"<speak>" + options.speechText + "</speak>" 
+             },
+             "shouldEndSession": options.endSession
+       }
+   };
 
+       if(options.repromptText){
+           response.response.reprompt = {           
+                   "outputSpeech": {
+                     "type": "SSML",
+                     "text": "<speak>" +options.repromptText+ "</speak>" 
+                   }  
+           };
+       }
+       return response;
+   }
+   ```
+
+###### Uploading lambda automation
+
+1. Install python
+
+2. AWS CLI setup
+
+   - Install cli:`pip install awscli`. 
+   - Create a user and give permissions at IAM Management console
+     - Go to https://console.aws.amazon.com/iam/home
+     - Go to **Users** section
+     - User name: "alexaskill"
+     - Access type: **Programmatic access**
+     - Click: **Next: Permissions**
+     - Select: **Attach existing policies directly**
+     - Type "lambda" in the table
+     - Select **AWSLambdaFullAccess**
+     - Click: **Next: Review**
+     - Click: **Create User**
+     - Copy **Acccess key** and **Secret Access Key**
+   - AWS configure
+     - type `aws configure`
+     - pass **Acccess key** and **Secret Access Key**
+     - region: eu-west-1
+     - format: json
+
+3. Upload lambda
+
+   - Archive your lambda script
+
+     ```shell
+     # on Windows you may need to download zip.exe
+     zip -r lambda_upload.zip index.js
+     ```
+
+   - Send an archived lambda to AWS
+
+     ```shell
+     aws lambda update-function-code --function-name GreetingsSkill --zip-file fileb://lambda_upload.zip
+
+     # you will see the output like
+     {
+         "TracingConfig": {
+             "Mode": "PassThrough"
+         },
+         "CodeSha256": "nNnwyW1HITZGsjD2oo8FLb7nh6/geM0Jum5reseq5bg=",
+         "FunctionName": "GreetingsSkill",
+         "CodeSize": 1408,
+         "MemorySize": 128,
+         "FunctionArn": "arn:aws:lambda:eu-west-1:235502691856:function:GreetingsSkill",
+         "Version": "$LATEST",
+         "Role": "arn:aws:iam::235502691856:role/lambda_basic_execution",
+         "Timeout": 3,
+         "LastModified": "2018-01-11T14:54:42.292+0000",
+         "Handler": "index.handler",
+         "Runtime": "nodejs6.10",
+         "Description": ""
+     }
+
+     ```
+
+     ​
 
 
 
