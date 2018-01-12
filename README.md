@@ -497,7 +497,416 @@
 
      ```
 
-     ​
+
+
+###### Sessions
+
+When we want to move the info from one intent to another withing a session or when we need to pass the information in steps because full information would be too big. 
+
+1. Add new Intents.
+
+   ```
+   HelloIntent say hello to {FirstName}
+   HelloIntent wish our guest {FirstName}
+   HelloIntent wish {FirstName}
+
+   QuoteIntent get me a quote
+   QuoteIntent get a quote
+
+   NextQuoteIntent more
+   NextQuoteIntent one more
+   NextQuoteIntent yes
+   ```
+
+2. Update lambda's code
+
+   ```javascript
+
+        /*---------------------------------------*/
+       }else if(request.type == "IntentRequest"){
+           if(request.intent.name === "HelloIntent"){
+               
+               handleHelloIntent(request, context)
+   		//New intent!!!
+           }else  if(request.intent.name === "QuoteIntent"){
+               handleQuoteIntent(request, context, session);
+            //New intent!!! 
+           }else  if(request.intent.name === "NextQuoteIntent"){
+               handleNextQuoteIntent(request, context, session);
+           //Handling built-in intents: StopIntent and   CanceIntent
+           }else if (request.intent.name === "AMAZON.StopIntent" 
+                     || request.intent.name === "AMAZON.CanceIntent") {
+              
+             context.succeed(buildResponse(
+               {
+                   speechText: "Good bye. ",
+                   endSession: true
+               }));
+           }else {
+               throw "Unknown intent";
+           }
+        } 
+   /*--------------------------------------*/
+
+   function getQuote(callback){
+     /*--------*/ 
+   }
+
+   function getWish(){
+    /*--------*/ 
+   }
+
+   function buildResponse(options){
+       var response = {
+           "version": "1.0",
+           "response": {
+           "outputSpeech": {
+               "type": "SSML",
+               "ssml":"<speak>" + options.speechText + "</speak>" 
+             },
+             "shouldEndSession": options.endSession
+       }
+   };
+
+       if(options.repromptText){
+           response.response.reprompt = {           
+                   "outputSpeech": {
+                     "type": "SSML",
+                     "text": "<speak>" +options.repromptText+ "</speak>" 
+                   }  
+           };
+       }
+   	//passing session attributes to the session
+       //it will be send back
+       if(options.session && options.session.attributes){
+           response.sessionAttributes = options.session.attributes;
+       }
+
+       return response;
+   }
+
+   function handleLaunchRequest(context){
+   	/*--------*/ 
+   }
+
+   function handleHelloIntent(request, context){
+       let options = {};
+       
+           let name = request.intent.slots.FirstName.value;
+           options.speechText = `Hello <say-as interpret-as="spell-out">${name}</say-as> ${name}. `;
+           options.speechText += getWish();
+
+           getQuote(function(quote, err){
+               if(err){
+                   context.fail(err);
+               }else{
+                   options.speechText+=quote;
+                   options.endSession = true;
+                   context.succeed(buildResponse(options));
+               }
+           });
+   }
+   function handleQuoteIntent(request, context, session){
+       let options = {};
+       options.session = session;
+
+       getQuote(function(quote, err){
+           if(err){
+               context.fail(err);
+           }else{
+               options.speechText=quote;
+               options.speechText += " Do you want to listen to one more quote";
+               options.repromptText = "You can say yes or one more";
+               //passing flag "true" 
+               //it will send back with a new request 
+               options.session.attributes.quoteIntent = true;
+               options.endSession = false;
+               context.succeed(buildResponse(options));
+           }
+       });
+   }
+   function handleNextQuoteIntent(request, context, session){
+       let options = {};
+       options.session = session;
+       //checking if flag quoteIntent was set previously
+       if(session.attributes.quoteIntent){
+
+       getQuote(function(quote, err){
+           if(err){
+               context.fail(err);
+           }else{
+               options.speechText=quote;
+               options.speechText += " Do you want to listen to one more quote";
+               options.repromptText = "You can say yes or one more";
+              // options.session.attributes.quoteIntent = true;
+               options.endSession = false;
+               context.succeed(buildResponse(options));
+           }
+       });
+
+   }else{
+       options.speechText = " Wrong invocation of this intent. "
+       options.endSession = true;
+       context.succeed(buildResponse(options));
+   }
+   }
+   ```
+
+3. Update **Intent Schema**
+
+   - Alexa provides the  [ build-in intents](https://developer.amazon.com/docs/custom-skills/standard-built-in-intents.html), ie. AMAZON.StopIntent, AMAZON.HelpIntent. However you still need to implement handling those events in lambda.
+
+   ```json
+   {
+     "intents":[
+       {
+         "intent" : "HelloIntent",
+         "slots" : [
+           {
+             "name": "FirstName",
+             "type": "GUEST_NAMES"
+           }
+         ]
+       },
+   	{
+   		"intent": "QuoteIntent" 
+   	},
+   	{
+   		"intent": "NextQuoteIntent" 
+   	},
+   	{
+   		"intent": "AMAZON.StopIntent" 
+   	},
+   	{
+   		"intent": "AMAZON.CancelIntent" 
+   	}
+     ]
+   }
+   ```
+
+###### Home cards 
+
+> Interactions between a user and an Alexa device can [include *home cards*](https://developer.amazon.com/docs/custom-skills/include-a-card-in-your-skills-response.html) displayed in the Amazon Alexa App, the companion app available for Fire OS, Android, iOS, and [desktop web browsers](http://alexa.amazon.com/). These are graphical cards that describe or enhance the voice interaction. A custom skill can include these cards in its responses.
+
+1. Modify lambda's code
+
+   - For diplaying images in a card use free to use pictures from the web 
+
+   ```javascript
+   function buildResponse(options){
+    /*-----------*/
+        if(options.cardTitle){
+           response.response.card = 
+           {
+               type: "Simple",
+               title: options.cardTitle
+           }
+           if(options.imageUrl){
+               response.response.card.type = "Standard";
+               response.response.card.text = options.cardContent;
+               response.response.card.image = {
+                   smallImageUrl: options.imageUrl,
+                   largeImageUrl: options.imageUrl
+               };
+           } else{
+               response.response.card.content = options.cardContent;
+           }
+       }
+     /*------------*/
+   }
+
+   /*------------*/
+   function handleHelloIntent(request, context){
+       let options = {};
+       
+           let name = request.intent.slots.FirstName.value;
+           options.speechText = `Hello <say-as interpret-as="spell-out">${name}</say-as> ${name}. `;
+           options.speechText += getWish();
+           options.cardTitle = `Hello ${name}!`;
+
+           getQuote(function(quote, err){
+               if(err){
+                   context.fail(err);
+               }else{
+                   options.speechText+=quote;
+
+                   options.cardContent = quote;
+                   options.imageUrl = "https://upload.wikimedia.org/wikipedia/commons/5/5b/Hello_smile.png";
+                   options.endSession = true;
+                   context.succeed(buildResponse(options));
+               }
+           });
+   }
+   ```
+
+2. Card part in a sample response
+
+   ```json
+   "card": {
+               "type": "Standard",
+               "title": "Hello John!",
+               "text": "All I can say about life is, Oh God, enjoy it! ",
+               "image": {
+                         "smallImageUrl":         "https://upload.wikimedia.org/wikipedia/commons/5/5b/Hello_smile.png",
+                         "largeImageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Hello_smile.png"
+                        }
+           }
+   ```
+
+###### Debugging
+
+- For debugging errors you should consider add logging to your lambada script. Logging (especially huge objects) should be conditional so that not to slow down your function.
+
+  ```javascript
+   if(process.env.NODE_DEBUG_EN){
+          console.log("Request:\n" + JSON.stringify(event, null, 2));   
+  }
+  ```
+
+- Running locally you add a local environment variable to the command 
+
+  ```shell
+  env NODE_DEBUG_EN=1 lambda-local -l index.js -h handler -e event.json
+  ```
+
+- In [aws consol](aws.amazon.com) you can do the same
+
+  - Open your function
+  - Go to **Environment variables** section
+  - Enter your variable: NODE_DEBUG_EN = "1"
+
+- Verify your logs
+
+  - Open your function 
+  - Go to **Monitoring** tab
+  - open link **Jump to Logs**
+
+###### Testing with Mocha
+
+1. Install Mocha and Chai
+
+   ```shell
+   npm install -g mocha
+   npm install chai
+   ```
+
+2. Create a **test.js** file  in a directory with your lambda function
+
+   ```javascript
+   //always use strict
+   'use strict'
+
+   /**
+    * chai - helpful checks
+    * loading chai module
+   */
+   var expect = require('chai').expect,  
+   /**
+    * loading lambda's module
+    */
+   lambdaToTest = require('./index')
+
+   //object passed to a lambda
+   function Context() {
+     this.speechResponse = null;
+     this.speechError = null;
+
+     this.succeed = function(rsp) {
+       this.speechResponse = rsp;
+       this.done();
+     };
+
+     this.fail = function(rsp) {
+       this.speechError = rsp;
+       this.done();
+     };
+
+   }
+
+   //validation
+   function validRsp(ctx,options) {
+        expect(ctx.speechError).to.be.null;
+        expect(ctx.speechResponse.version).to.be.equal('1.0');
+        expect(ctx.speechResponse.response).not.to.be.undefined;
+     /*--------**/
+   }
+   function validCard(ctx) {
+        expect(ctx.speechResponse.response.card).not.to.be.undefined;
+        expect(ctx.speechResponse.response.card.type).to.be.equal('Simple');
+        expect(ctx.speechResponse.response.card.title).not.to.be.undefined;
+        expect(ctx.speechResponse.response.card.content).not.to.be.undefined;
+   }
+   //event template passed to a lambda
+   var event = {
+     session: {
+       new: false,
+       sessionId: 'session1234',
+       attributes: {},
+       user: {
+         userId: 'usrid123'
+       },
+       application: {
+         applicationId: 'amzn1.echo-sdk-ams.app.1234'
+       }
+     },
+     version: '1.0',
+     request: {
+       intent: {
+         slots: {
+           SlotName: {
+             name: 'SlotName',
+             value: 'slot value'
+           }
+         },
+         name: 'intent name'
+       },
+       type: 'IntentRequest',
+       requestId: 'request5678'
+     }
+   };
+
+   //test suite
+   describe('All intents', function() {
+     var ctx = new Context();
+
+     /**test case
+     	 testing LaunchIntent
+     */
+     describe('Test LaunchIntent', function() {
+
+         /*setting the input data and calling lambda */
+         before(function(done) {
+           event.request.type = 'LaunchRequest';
+           event.request.intent = {};
+           event.session.attributes = {};
+           ctx.done = done;
+           lambdaToTest.handler(event , ctx);
+         });
+
+   	/*assertions*/
+        it('valid response', function() {
+          validRsp(ctx,{
+            endSession: false,
+          });
+        });
+
+        it('valid outputSpeech', function() {
+          expect(ctx.speechResponse.response.outputSpeech.ssml).to.match(/Welcome/);
+        });
+       
+        it('valid repromptSpeech', function() {
+          expect(ctx.speechResponse.response.reprompt.outputSpeech.ssml)
+            .to.match(/You can say/);
+        });
+
+     });
+   /**OTHER TEST CASES*/  
+    });  
+   ```
+
+3. Run your test `mocka test`
+
+
 
 
 
