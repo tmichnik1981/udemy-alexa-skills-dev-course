@@ -907,6 +907,74 @@ When we want to move the info from one intent to another withing a session or wh
 3. Run your test `mocka test`
 
 
+#### Developing "Greetings Skill" using Webservice (python)
+
+###### Setup
+
+1. Install python
+
+2. Install [flask](http://flask.pocoo.org/)
+
+   ```shell
+   pip install Flask
+   ```
+
+3. Add greeting.py script
+
+   ```python
+   from flask import Flask
+   app = Flask(__name__)
+
+   @app.route("/")
+   def hello():
+       return "Hello World!"
+
+   if __name__== "__main__":
+       app.run()
+   ```
+
+4. Run `python greeting.py`
+
+   - If you can see the result
+
+     ```shell
+      * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+     127.0.0.1 - - [15/Jan/2018 14:50:35] "GET / HTTP/1.1" 200 -
+     127.0.0.1 - - [15/Jan/2018 14:50:35] "GET /favicon.ico HTTP/1.1" 404 -
+     ```
+
+   - it means that you service is running
+
+   - stop the service
+
+5. Implement a webservice
+
+   - [Requirements for Your Web Service](https://developer.amazon.com/docs/custom-skills/host-a-custom-skill-as-a-web-service.html#requirements-for-your-web-service)
 
 
+   - Sample code **tutorials\Greetings\webservice\greetings.py**
+   - Sample test **tutorials\Greetings\webservice\test.py**
 
+6. Test with curl
+
+   ```shell
+   curl -H "Content-Type: application/json" --data @event.json http://127.0.0.1:5000/alexa_end_point
+   ```
+
+###### Testing local webservice with Alexa skill
+
+1. Download [ngrok](https://ngrok.com/download).
+2. Run your service `python greeting.py` 
+3. Expose your service outside using ngrok:  `ngrok http 5000`
+   - Displayed address can be used in a skill to configure **http**  url instead of lambda's address
+
+###### Flask-Ask framework
+
+- [flask-ask](https://github.com/johnwheeler/flask-ask)
+- [flask-ask quickstart](https://developer.amazon.com/blogs/post/Tx14R0IYYGH3SKT/Flask-Ask-A-New-Python-Framework-for-Rapid-Alexa-Skills-Kit-Development)
+- [flask-ask tutorial](https://alexatutorial.com/flask-ask/)
+- installation:  `pip install flask-ask `
+- instaling requests module: `pip install requests`
+- sample code: **tutorials\Greetings\webservice\greeting_ask.py**
+
+#### Developing "Nutrition Lookup Skill"
