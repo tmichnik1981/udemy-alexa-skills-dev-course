@@ -42,8 +42,6 @@
 - Response
   - Hello **John**, Good morning
 
-#### Instructions
-
 ###### Creating a skill
 
 1. Go to https://developer.amazon.com/
@@ -1023,8 +1021,190 @@ When we want to move the info from one intent to another withing a session or wh
 
 ###### Testing with mocha
 
-1. Copy...
-2. Implemen..
-   - sds
-3. Run test `env NODE_DEBUG_EN=1 mocha test.js`
+1. Copy **tutorials\helper_files\test_template.js** to **tutorials\FoodNutritionSkill\test.js**
 
+2. Implement the tests
+
+3. Run tests:
+
+   ```shell
+   # without logs
+   mocha test.js
+   # with logs
+   env NODE_DEBUG_EN=1 mocha test.js
+   ```
+
+###### Creating a skill
+
+- Analogously to "Greeting skill"
+
+1. Go to  https://developer.amazon.com/
+
+2. Add a new skill
+
+   - Name: "Food Nutrition Lookup"
+
+   - Invocation Name: "nutri lookup"
+
+   - Intent Schema:
+
+     ```json
+     {
+       "intents": [
+         {
+           "intent": "GetNutritionInfo",
+           "slots": [
+             {
+               "name": "FoodItem",
+               "type": "FOOD_ITEMS"
+             }
+           ]
+         },
+         {
+           "intent": "GetNextEventIntent",
+           "slots": [
+           ]
+         },
+         {
+           "intent": "AMAZON.StopIntent"
+         }
+       ]
+     }
+     ```
+
+   - Custom Slot Types
+
+     - Enter Type: "FOOD_ITEMS"
+
+     - Enter Values (from **tutorials\FoodNutritionSkill\speechAssets\FOOD_ITEMS**):
+
+       ```
+       butter salted
+       butter
+       butter whipped with salt
+       butter whipped
+       butter whipped with
+       ....................
+       ```
+
+   - Sample Utterances
+
+     ```
+     GetNutritionInfo how many calories are in {FoodItem}
+
+     GetNextEventIntent more information
+     GetNextEventIntent more
+     ```
+
+3. When Lambda is created (and tested) and ARN is configured you can test your skill
+
+   - Type "how many calories are in potatos" in **Test** / **Service Simulator**.
+
+4. Publishing Information
+
+   - Category: **Food & Drink**
+
+   - Testing Instructions:
+
+     ```
+     No special account or hardware requirements needed. I provided more samples in "Full Skill Description".
+     ```
+
+   - Short Skill Description: "This skill provides Calories information for food items"
+
+   - Full Skill Description:
+
+     ```
+     This skill brings you Calories information for 900+ commonly consumed food items in US (according to USDA). Users can ask Alexa about any food item and this skill will provide you Calories per 100 grams of food. The value expressed in Large food Calories(also known as kilocalories). Data derived from USDA database.
+     Sample utterances syntax:
+     - Alexa, ask Nutri Lookup about <food item>
+     - Alexa, ask Nutri Lookup about <food item> in <food product group>
+     - Alexa, ask Nutri Lookup how many calories are in <food item> 
+
+     Here are few examples:
+     Alexa, ask Nutri Lookup about blackberry juice
+     Alexa, ask Nutri Lookup about cereals quaker
+     Alexa, ask Nutri Lookup how many calories are in bread wheat
+
+     Examples with food group:
+     Alexa, ask Nutri Lookup about apples raw in fruit products
+     Alexa, ask Nutri Lookup  how many calories are in bread wheat from Baked products
+
+     Tip:
+     It is always better to provide food product group to get better results.
+     Here are the food product groups supported. You can mention just first word from this list. Ex: baked products, Dairy products.
+     - American Indian Alaska Native Foods
+     - Baby Foods
+     - Legumes and Legume
+     - Meals, Entrees and Side Dishes
+     - Nut and Seed
+     - Restaurant Foods
+     - Sausages and Lunch on Meats
+     - Soups, Sauses and Gravies
+     - Spices and Herbs
+
+     Sample food items can be found at:
+     https://github.com/abcde
+     ```
+
+   - Example Pharses:
+
+     ```
+     Alexa, ask Nutri Lookup about apples raw
+     Alexa, ask Nutri Lookup about butter salted from dairy products
+     Alexa, ask Nutri Lookup how many calories are in oranges 
+     ```
+
+   - Keywords: Nutrition, Food, Calories
+
+   - Create and upload: **Small Icon**, **Large Icon**
+
+5. Privacy & Compliance
+
+   - You set everything to **No**
+
+6. If everything is setup properly you will be able to Submit your skill for certification
+
+###### Creating a Lambda function
+
+- Analogously to "Greeting skill"
+
+1. Go to https://aws.amazon.com/, login or create an account
+
+2. Create function
+
+   - Name: "foodNutriLookup"
+   - Runtime: **Node.js 6.10**
+   - Description: "Food Nutrition Lookup Function"
+   - Triggers: **Alexa Skill Kit**
+
+3. Save and deploy function and other dependencies with CLI
+
+   ```shell
+   # archiving
+   zip -r lambda_upload.zip index.js food_db.json node_modules
+   # deployment
+   aws lambda update-function-code --function-name foodNutriLookup --zip-file fileb://lambda_upload.zip
+
+   ```
+
+4. Copy lambda's ARN endpoint to Food Nutrition Lookup skill, **Configuration** / **Endpoint**.
+
+###### Certification process
+
+- [Submission checklist](https://developer.amazon.com/docs/custom-skills/certification-requirements-for-custom-skills.html#submission-checklist)
+
+- [Security requirements](https://developer.amazon.com/docs/custom-skills/security-testing-for-an-alexa-skill.html)
+
+  - [Handling Alexa requests](https://developer.amazon.com/docs/custom-skills/handle-requests-sent-by-alexa.html)
+
+  - Copy **Application Id** from **Alexa skill** / **Skill information** to lambda function
+
+    ```javascript
+    //Add your skill application ID from amazon devloper portal
+    var APP_ID = 'amzn1.ask.skill.9831e494-922a-4094-aa38-32a1cb4fe886';
+    ```
+
+- [Functional testing](https://developer.amazon.com/docs/custom-skills/functional-testing-for-a-custom-skill.html)
+
+- [User Experience testing](https://developer.amazon.com/docs/custom-skills/voice-interface-and-user-experience-testing-for-a-custom-skill.html)

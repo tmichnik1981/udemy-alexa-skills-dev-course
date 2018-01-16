@@ -59,7 +59,7 @@ var event = {
       userId: 'usrid123'
     },
     application: {
-      applicationId: 'amzn1.echo-sdk-ams.app.1234'
+      applicationId: 'amzn1.ask.skill.9831e494-922a-4094-aa38-32a1cb4fe886'
     }
   },
   version: '1.0',
@@ -252,4 +252,32 @@ describe('All intents', function() {
     }
   }
   
+  describe(`Test GetNutritionInfo empty slot`, function() {
+
+    before(function(done) {
+      event.request.intent = {};
+      event.session.attributes = {};
+      event.request.type = 'IntentRequest';
+      event.request.intent.name = 'GetNutritionInfo';
+      event.request.intent.slots = {};
+      ctx.done = done;
+      lambdaToTest.handler(event , ctx);
+    });
+  
+   it('valid response', function() {
+     validRsp(ctx, {endSession:false});
+   });
+  
+  
+   it('valid outputSpeech', function() {
+       expect(ctx.speechResponse.response.outputSpeech.ssml).to.match(/Looks like/);
+   });
+  
+   it('valid reprompt', function() {
+     expect(ctx.speechResponse.response.reprompt.outputSpeech.ssml).to.match(/For example/);
+   });
+  
+  });
+  
+
 });

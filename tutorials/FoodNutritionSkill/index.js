@@ -175,7 +175,7 @@ function getError(err) {
 //--------------------------------------------- Skill specific logic starts here ----------------------------------------- 
 
 //Add your skill application ID from amazon devloper portal
-var APP_ID = '';
+var APP_ID = 'amzn1.ask.skill.9831e494-922a-4094-aa38-32a1cb4fe886';
 
 function onSessionStarted(sessionStartedRequest, session) {
     logger.debug('onSessionStarted requestId=' + sessionStartedRequest.requestId + ', sessionId=' + session.sessionId);
@@ -210,6 +210,14 @@ var MAX_RESPONSES = 3;
 var MAX_FOOD_ITEMS = 10;
 intentHandlers['GetNutritionInfo'] = function(request,session,response,slots) {
   //Intent logic
+
+  if(slots.FoodItem === undefined){
+    response.speechText = 'Looks like you forgot to mention food name. Which food calorie information you would like to know?';
+    response.repromptText = 'For example, you can say, how many calories are in butter salted. ';
+    response.shouldEndSession = false;
+    response.done();
+    return;
+  }
   //loading pseudo database from json file
   var foodDb = require('./food_db.json')
   var results = searchFood(foodDb, slots.FoodItem);
@@ -272,6 +280,16 @@ intentHandlers['AMAZON.StopIntent'] = function(request,session,response,slots) {
   response.shouldEndSession = true;
   response.done();
 };
+
+
+intentHandlers['AMAZON.CancelIntent'] =  intentHandlers['AMAZON.StopIntent'];
+
+intentHandlers['AMAZON.HelpIntent'] = function(request,session,response,slots) {
+  response.speechText = "You can ask Nutrition Lookup skill about calorie information of food items. For a given food item, it provides you Calories per 100 grams. For example, you can say butter salted, to know about its Calories per 100 grams. Alternatively, you can also say how many calories in butter salted. If skill not opened you can also say in one shot, Alexa, ask Nutri Lookup about butter salted. Please refer to skill description for all possible sample utterences. Which food calorie information would you like to know?";
+  response.repromptText = "Which food calorie information would you like to know? or You can say stop to stop the skill.";
+  response.shouldEndSession = false;
+  response.done();
+}
 
 function searchFood(fDb, foodName) {
   foodName = foodName.toLowerCase();
