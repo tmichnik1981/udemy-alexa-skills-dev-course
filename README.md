@@ -30,7 +30,7 @@
 
 #### Developing "Greetings Skill"
 
-- Goal: wishing our fuest
+- Goal: wishing our guest
 - Invocation
   - Name: **greeter** - must appear to activate our skill
   - ie. open/launch/talk to/begin **greeter** - activating the skill
@@ -40,7 +40,7 @@
   - Alexa, ask greeter to wish our guest **John**
   - Alexa, ask greeter to wish **John**
 - Response
-  - Helo **John**, Good morning
+  - Hello **John**, Good morning
 
 #### Instructions
 
@@ -977,4 +977,44 @@ When we want to move the info from one intent to another withing a session or wh
 - instaling requests module: `pip install requests`
 - sample code: **tutorials\Greetings\webservice\greeting_ask.py**
 
-#### Developing "Nutrition Lookup Skill"
+#### Developing "Food Nutrition Lookup Skill"
+
+- [Nutrient data](https://www.ars.usda.gov/northeast-area/beltsville-md/beltsville-human-nutrition-research-center/nutrient-data-laboratory/docs/sr28-download-files/)
+- Script generating food db (json files) : **tutorials\FoodNutritionSkill\gen_food_js.py**
+
+###### Creating a Lambda function
+
+1. Init **Node** package
+
+   - Might be neccessary to install **Winston** package: `npm install winston --save`
+
+   ```shell
+   npm init
+   This utility will walk you through creating a package.json file.
+   It only covers the most common items, and tries to guess sensible defaults.
+
+   See `npm help json` for definitive documentation on these fields
+   and exactly what they do.
+
+   Use `npm install <pkg> --save` afterwards to install a package and
+   save it as a dependency in the package.json file.
+
+   Press ^C at any time to quit.
+   name: (FoodNutritionSkill) food_nutrition
+   version: (1.0.0)
+   description: Food nutrition look up skill
+   entry point: (index.js)
+   test command: mocha test.js
+   git repository:
+   keywords:
+   author:
+   license: (ISC)
+   ```
+
+2. Copy  **tutorials\helper_files\alexa_skill_template.js** to **tutorials\FoodNutritionSkill\index.js**
+
+3. Implement your lambda function: **index.js**
+
+4. Test locally
+
+   - Run `source run` or `lambda-local -l index.js -h handler -e event.json`
