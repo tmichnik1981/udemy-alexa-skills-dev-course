@@ -192,8 +192,8 @@ function onSessionEnded(sessionEndedRequest, session) {
 function onLaunch(launchRequest, session, response) {
   logger.debug('onLaunch requestId=' + launchRequest.requestId + ', sessionId=' + session.sessionId);
 
-  response.speechText = 'Hi, I am Food Nutrition Lookup skill. Ypu can ask me about calorie information of food items. Which food would you like to check?';
-  response.repromptText = 'Reprompt help msg';
+  response.speechText = 'Hi, I am Food Nutrition Lookup skill. You can ask me about calorie information of food items. Which food would you like to check?';
+  response.repromptText = 'For example, you can say how many calories are in butter salted.';
   response.shouldEndSession = false;
   response.done();
 }
@@ -213,6 +213,9 @@ intentHandlers['GetNutritionInfo'] = function(request,session,response,slots) {
   //loading pseudo database from json file
   var foodDb = require('./food_db.json')
   var results = searchFood(foodDb, slots.FoodItem);
+
+  response.cardTitle = `Nutrition Lookup results for: ${slots.FoodItem}`;
+  response.cardContent = '';
 
   if(results.length==0){
     response.speechText = `Could not find any food item for ${slots.FoodItem}. Please try different  food item. `;
@@ -246,13 +249,22 @@ intentHandlers['GetNutritionInfo'] = function(request,session,response,slots) {
 intentHandlers['GetNextEventIntent'] = function(request,session,response,slots) {
   //Intent logic
   
-    response.speechText = `Your search resulted in ${session.attributes.resultLength} food items. Here are the few food items from search.
-    Please add more keywords from this list for better results.`;
+  if(session.attributes.results) {
+    response.cardTitle = `Nutrition Lookup more information for: ${session.attributes.FoodItem}`;
+
+    response.speechText  = `Your search resulted in ${session.attributes.resultLength} food items. Here are the few food items from search. Please add more keywords from this list for better results.`;
+    response.cardContent = `${response.speechText}\n`;
+
+
     session.attributes.results.forEach(function(item) {
-      response.speechText += `${irem[0]}. `;
+      response.speechText += `${item[0]}. `; 
+      response.cardContent += `'${item[0]}'\n`;
     });
-    response.shouldEndSession = true;
-    response.done();
+  } else {
+    response.speechText  = `Wrong invocation of this intent. `;
+  }
+  response.shouldEndSession = true;
+  response.done();
 };
 
 intentHandlers['AMAZON.StopIntent'] = function(request,session,response,slots) {

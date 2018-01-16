@@ -1015,6 +1015,16 @@ When we want to move the info from one intent to another withing a session or wh
 
 3. Implement your lambda function: **index.js**
 
+   - Sample code: **tutorials\FoodNutritionSkill\index.js**
+
 4. Test locally
 
    - Run `source run` or `lambda-local -l index.js -h handler -e event.json`
+
+###### Testing with mocha
+
+1. Copy...
+2. Implemen..
+   - sds
+3. Run test `env NODE_DEBUG_EN=1 mocha test.js`
+
