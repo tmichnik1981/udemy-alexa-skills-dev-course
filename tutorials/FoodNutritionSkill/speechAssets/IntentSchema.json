@@ -15,6 +15,21 @@
       ]
     },
     {
+      "intent": "GetQuizIntent"
+    }, 
+	{
+      "intent": "QuizAnswerIntent"
+	  "slots": [
+	   {
+		"name": "Answer",
+		"type": "AMAZON.Number"
+	   }
+      ]
+    }, 
+	{
+      "intent": "DontKnowIntent"
+    },
+    {
       "intent": "AMAZON.StopIntent"
     },
     {

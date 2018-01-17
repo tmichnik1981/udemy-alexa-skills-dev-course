@@ -1208,3 +1208,23 @@ When we want to move the info from one intent to another withing a session or wh
 - [Functional testing](https://developer.amazon.com/docs/custom-skills/functional-testing-for-a-custom-skill.html)
 
 - [User Experience testing](https://developer.amazon.com/docs/custom-skills/voice-interface-and-user-experience-testing-for-a-custom-skill.html)
+
+#### Developing "Email checker Skill"
+
+###### Account linking
+
+- integration with gmail, twitter, facebook etc.
+- OAuth
+- [Google Auth2](https://developers.google.com/identity/protocols/OAuth2)
+
+1. Go to [Google API library](https://console.developers.google.com/apis/library)
+2. Create a new project "email-checker-skill"
+3. Go to  email-checker-skill / Credentials / OAuth consent screen
+   - Product Name: "Email Checker Skill"
+   - Other fields are optional
+   - Save
+4. Create Auth client id
+   - Application type: **Web application**
+   - Name: "Email checker skill"
+   - Click **Create**
+

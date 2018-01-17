@@ -83,7 +83,7 @@ var event = {
 
 describe('All intents', function() {
   var ctx = new Context();
-
+  var storedSession;
 
   describe('Test LaunchIntent', function() {
 
@@ -278,6 +278,140 @@ describe('All intents', function() {
    });
   
   });
+
+
+  describe(`Test GetQuizIntent`, function() {
+    before(function(done) {
+      event.request.intent = {};
+      event.session.attributes = {};
+      event.request.type = 'IntentRequest';
+      event.request.intent.name = 'GetQuizIntent';
+      event.request.intent.slots = {};
+      ctx.done = done;
+      lambdaToTest.handler(event , ctx);
+    });
+
+   it('valid response', function() {
+     storedSession = ctx.speechResponse.sessionAttributes;
+     validRsp(ctx, {endSession:false});
+   });
+
+   it('valid outputSpeech', function() {
+     expect(ctx.speechResponse.response.outputSpeech.ssml).to.match(/How many/);
+   });
+
+   it('valid reprompt', function() {
+     expect(ctx.speechResponse.response.reprompt.outputSpeech.ssml).to.match(/Please tell/);
+   });
+
+});
+
+describe(`Test QuizAnswerIntent correct answer`, function() {
+    before(function(done) {
+      var fruitInfo = storedSession.fruit;
+      event.request.intent = {};
+      event.session.attributes = ctx.speechResponse.sessionAttributes;
+      event.request.type = 'IntentRequest';
+      event.request.intent.name = 'QuizAnswerIntent';
+      event.request.intent.slots = {
+        Answer: {
+          name: 'Answer',
+          value: fruitInfo[1].toString()
+        }
+      };
+      ctx.done = done;
+      lambdaToTest.handler(event , ctx);
+    });
+
+   it('valid response', function() {
+     validRsp(ctx, {endSession:true});
+   });
+
+   it('valid outputSpeech', function() {
+     expect(ctx.speechResponse.response.outputSpeech.ssml).to.match(/Correct answer./);
+   });
+
+});
+
+describe(`Test QuizAnswerIntent close answer`, function() {
+    before(function(done) {
+      var fruitInfo = storedSession.fruit;
+      var answer = Number(fruitInfo[1]) + Math.floor(Math.random()*8) - 4;
+      if(answer === Number(fruitInfo[1])) {
+        answer += 1;
+      }
+      event.request.intent = {};
+      event.session.attributes = storedSession;
+      event.request.type = 'IntentRequest';
+      event.request.intent.name = 'QuizAnswerIntent';
+      event.request.intent.slots = {
+        Answer: {
+          name: 'Answer',
+          value: answer.toString()
+        }
+      };
+      ctx.done = done;
+      lambdaToTest.handler(event, ctx);
+    });
+
+   it('valid response', function() {
+     validRsp(ctx, {endSession:true});
+   });
+
+   it('valid outputSpeech', function() {
+     expect(ctx.speechResponse.response.outputSpeech.ssml).to.match(/You are pretty close./);
+   });
+
+});
+
+describe(`Test QuizAnswerIntent wrong answer`, function() {
+    before(function(done) {
+      var fruitInfo = storedSession.fruit;
+      var answer = Number(fruitInfo[1]) + Math.floor(Math.random()*10) + 5;
+      event.request.intent = {};
+      event.session.attributes = storedSession;
+      event.request.type = 'IntentRequest';
+      event.request.intent.name = 'QuizAnswerIntent';
+      event.request.intent.slots = {
+        Answer: {
+          name: 'Answer',
+          value: answer.toString()
+        }
+      };
+      ctx.done = done;
+      lambdaToTest.handler(event , ctx);
+    });
+
+   it('valid response', function() {
+     validRsp(ctx, {endSession:true});
+   });
+
+   it('valid outputSpeech', function() {
+     expect(ctx.speechResponse.response.outputSpeech.ssml).to.match(/Wrong answer./);
+   });
+
+});
+
+describe(`Test DontKnowIntent`, function() {
+    before(function(done) {
+      event.request.intent = {};
+      event.session.attributes = storedSession;
+      event.request.type = 'IntentRequest';
+      event.request.intent.name = 'DontKnowIntent';
+      event.request.intent.slots = {};
+      ctx.done = done;
+      lambdaToTest.handler(event , ctx);
+    });
+
+   it('valid response', function() {
+     validRsp(ctx, {endSession:true});
+   });
+
+   it('valid outputSpeech', function() {
+     expect(ctx.speechResponse.response.outputSpeech.ssml).to.match(/No problem./);
+   });
+
+});
   
 
 });
