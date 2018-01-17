@@ -3,3 +3,8 @@ EmailCheckIntent whats in my inbox
 EmailCheckIntent whats new in my inbox
 EmailCheckIntent whats new 
 
+SetPinIntent set my pin to {SPin}
+
+EmailAuthIntent my secret pin is {CPin}
+
+ForgotPinIntent I forgot my pin
