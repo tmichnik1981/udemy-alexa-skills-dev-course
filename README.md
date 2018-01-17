@@ -1211,9 +1211,9 @@ When we want to move the info from one intent to another withing a session or wh
 
 #### Developing "Email checker Skill"
 
-###### Account linking
+###### Preperation for account linking
 
-- integration with gmail, twitter, facebook etc.
+- integration with gmail
 - OAuth
 - [Google Auth2](https://developers.google.com/identity/protocols/OAuth2)
 
@@ -1227,4 +1227,179 @@ When we want to move the info from one intent to another withing a session or wh
    - Application type: **Web application**
    - Name: "Email checker skill"
    - Click **Create**
+   - Store somewhere the id and the secret key
 
+###### Creating a skill
+
+- Analogously to "Greeting skill"
+
+1. Go to  https://developer.amazon.com/
+
+2. Add a new skill
+
+   - Name: "Email Checker"
+
+   - Invocation Name: "email checker"
+
+   - Intent Schema (sample available: **tutorials\AccountLinking\speechAssets\\IntentSchema.json**)
+
+     ```json
+     {
+       "intents": [
+         {
+           "intent": "EmailCheckIntent"
+         },
+         {
+           "intent": "AMAZON.StopIntent"
+         }
+       ]
+     }
+     ```
+
+   - Sample Utterances (sample available: **tutorials\AccountLinking\speechAssets\\SampleUtterances.txt**)
+
+     ```
+     EmailCheckIntent check my email
+     EmailCheckIntent whats in my inbox
+     EmailCheckIntent whats new in my inbox
+     EmailCheckIntent whats new 
+     ```
+
+   - Service Endpoint Type: **AWS Lambda ARN** (create a new lambda function and provide an URL)
+
+###### Creating a Lambda function
+
+- Analogously to "Greeting skill"
+
+1. Go to https://aws.amazon.com/, login or create an account
+2. Create function
+   - Name: "EmailChecker"
+   - Runtime: **Node.js 6.10**
+   - Description: "Email checker skill function"
+   - Triggers: **Alexa Skill Kit**
+   - Copy ARN URL to Alexa Skill
+3. Save and deploy function and other dependencies with CLI
+
+###### Account Linking
+
+1. Go to your skill **Configuration** / **Account Linking**, choose **Yes**
+
+   - Authorization URL: https://accounts.google.com/o/oauth2/auth?access_type=offline&response_type=code
+
+     - if it doesn't work, add &approval_prompt=force
+
+   - Client Id: past previously generated Google's client id 
+
+   - Scope: 
+
+     -  [Gmail Scopes](https://developers.google.com/gmail/api/v1/reference/users/messages/list)
+
+       ```
+       https://mail.google.com/
+       https://www.googleapis.com/auth/gmail.modify
+       https://www.googleapis.com/auth/gmail.readonly
+       ```
+
+   - Copy **Redirect URLs**  to https://console.developers.google.com / **Email checker skill** project / **Credentials** / **Authorized redirect URIs**
+
+   - Access Token URI: https://www.googleapis.com/oauth2/v4/token
+
+     - can be found: https://developers.google.com/identity/protocols/OAuth2WebServer
+
+   - Client Secret: past previously generated Google's secret
+
+   - Click **Save**
+
+2. Go to alexa.amazon.com
+
+   - Login
+   - Find your skill: Email Checker
+   - Enable if necessary
+   - Click **Link Account**
+   - You will be redirected
+   - Choose your gmail account 
+   - Allow access
+
+3. Go back to developer.amazon.com and your skill
+
+4. Test
+
+   - type "check my mail" in **Service Simulator**
+   - on https://myaccount.google.com/security you can find apps which have access to your gmail
+
+###### Implement the lambda function
+
+1. Init Node project
+
+   ```
+   npm init
+   This utility will walk you through creating a package.json file.
+   It only covers the most common items, and tries to guess sensible defaults.
+
+   See `npm help json` for definitive documentation on these fields
+   and exactly what they do.
+
+   Use `npm install <pkg> --save` afterwards to install a package and
+   save it as a dependency in the package.json file.
+
+   Press ^C at any time to quit.
+   name: (AccountLinking) email_checker
+   version: (1.0.0)
+   description: Email checker skill lambda function
+   entry point: (index.js)
+   test command: mocha test
+   git repository:
+   keywords:
+   author:
+   license: (ISC)
+   ```
+
+2. Copy templates (alexa_skill_template.js, test_template.js) to your project directory as index.js and test.js.
+
+3. Install necessary modules
+
+   ```shell
+   npm install winston --save
+   npm install bluebird
+   npm install bcryptjs --save
+   npm install -g aws-sdk
+   ```
+
+   - Set up a local environment **NODE_PATH** with path to your global node_modules location. Then add **NODE_PATH** to **Path**.
+
+4. Code samples: **tutorials\AccountLinking\index.js**
+
+5. Mocha testing
+
+   ```shell
+   mocha test
+   # or
+   env NODE_DEBUG_EN=1 mocha test6.
+   ```
+
+6. Save and deploy function and other dependencies with CLI
+
+   ```
+   # archiving
+   zip -r lambda_upload.zip index.js node_modules
+   # deployment
+   aws lambda update-function-code --function-name EmailChecker --zip-file fileb://lambda_upload.zip
+
+   ```
+
+   ​
+
+###### Setting up Dynamo DB
+
+1. Go to **aws.amazon.com** / **services** / **Dynamo DB**
+   - Click **Create table**
+   - Table name: "UsrPins"
+   - Primary key: "UsrId"
+   - Click **Create**
+2. Go to **aws.amazon.com** / **services** / **IAM** / **Roles**
+   - Click **Create New Role**
+   - Role name: "lambdadynamo_access"
+   - Policies: **AWSLambdaFullAccess**,  **AmazonDynamoDBFullAccess**, **CloudWatchLogsFullAccess**
+   - Click **Create a Role**
+3. Go back to your lambda
+   - Change **Execution role** to **lambdadynamo_access**
